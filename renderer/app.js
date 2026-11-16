@@ -215,6 +215,7 @@
     const fix = (pages) => pages.forEach((p) => p.buttons.forEach((b) => { if (b.action.type === 'profile' && b.action.profileId === gone) b.action = { type: 'none' }; }));
     fix(cfg.pages); cfg.profiles.forEach((q) => fix(q.pages)); resetAfterProfileChange();
   }
+  let pageSetOpen = false;
   function renderProfBar() {
     const bar = $('#profbar'); if (!bar) return;
     bar.className = 'profbar';
@@ -222,17 +223,19 @@
     bar.replaceChildren(h('span', { class: 'lbl' }, 'Profil'),
       select(all.map((x) => [x.id, '👤 ' + x.name]), cfg.profile.id, (v) => switchProfile(v)),
       h('button', { class: 'btn sm', title: 'Nouveau profil vide', onclick: addProfile }, '＋ Nouveau'),
-      h('button', { class: 'btn sm', onclick: renameProfile }, 'Renommer'),
-      h('button', { class: 'btn sm', onclick: dupProfile }, 'Dupliquer'),
-      h('button', { class: 'btn sm danger', disabled: !cfg.profiles.length, onclick: delProfile }, 'Supprimer'),
-      h('span', { style: { marginLeft: 'auto', display: 'flex', gap: '6px' } },
-        h('button', { class: 'btn sm', onclick: async () => { if (await api.exportProfile({ name: cfg.profile.name, pages: cfg.pages })) toast('Profil exporté', 'ok'); } }, 'Exporter'),
-        h('button', { class: 'btn sm', onclick: async () => {
-          const r = await api.importProfile(); if (!r) return; if (r.error) return toast('Import impossible : ' + r.error, 'err');
-          if (cfg.profiles.length >= 14) return toast('Maximum 15 profils', 'err');
-          stash(); cfg.profile = { id: rid('pr_'), name: String(r.name || 'Importé').slice(0, 30) }; cfg.pages = Array.isArray(r.pages) && r.pages.length ? r.pages : newPages();
-          resetAfterProfileChange(); toast('Profil importé', 'ok');
-        } }, 'Importer')));
+      h('details', { class: 'menu' }, h('summary', { class: 'btn sm', title: 'Autres actions du profil' }, '⋯'),
+        h('div', { class: 'menu-pop', onclick: (e) => { const d = e.target.closest('details'); if (d && e.target.closest('button')) d.open = false; } },
+          h('button', { onclick: renameProfile }, 'Renommer'),
+          h('button', { onclick: dupProfile }, 'Dupliquer'),
+          h('button', { class: 'danger', disabled: !cfg.profiles.length, onclick: delProfile }, 'Supprimer'),
+          h('hr'),
+          h('button', { onclick: async () => { if (await api.exportProfile({ name: cfg.profile.name, pages: cfg.pages })) toast('Profil exporté', 'ok'); } }, 'Exporter…'),
+          h('button', { onclick: async () => {
+            const r = await api.importProfile(); if (!r) return; if (r.error) return toast('Import impossible : ' + r.error, 'err');
+            if (cfg.profiles.length >= 14) return toast('Maximum 15 profils', 'err');
+            stash(); cfg.profile = { id: rid('pr_'), name: String(r.name || 'Importé').slice(0, 30) }; cfg.pages = Array.isArray(r.pages) && r.pages.length ? r.pages : newPages();
+            resetAfterProfileChange(); toast('Profil importé', 'ok');
+          } }, 'Importer…'))));
   }
 
   // ================= ÉDITEUR =================
@@ -253,11 +256,12 @@
       cfg.pages.length < 20 ? h('button', { class: 'ptab', title: 'Ajouter une page', onclick: addPage }, '＋') : null,
       h('span', { style: { marginLeft: 'auto', display: 'flex', gap: '6px' } },
         h('button', { class: 'btn sm', id: 'paste', title: 'Coller le bouton copié (Ctrl+V)', hidden: !clip, onclick: pasteBtn }, '📋 Coller'),
-        h('button', { class: 'btn sm', id: 'undo', title: 'Annuler (Ctrl+Z)', disabled: hp === 0, onclick: () => travel(-1) }, '↶ Annuler'),
-        h('button', { class: 'btn sm', id: 'redo', title: 'Rétablir (Ctrl+Y)', disabled: hp >= hist.length - 1, onclick: () => travel(1) }, '↷ Rétablir')));
+        h('button', { class: 'btn sm', id: 'undo', title: 'Annuler (Ctrl+Z)', disabled: hp === 0, onclick: () => travel(-1) }, '↶'),
+        h('button', { class: 'btn sm', id: 'redo', title: 'Rétablir (Ctrl+Y)', disabled: hp >= hist.length - 1, onclick: () => travel(1) }, '↷'),
+        h('button', { class: 'btn sm' + (pageSetOpen ? ' on' : ''), title: 'Réglages de la page : nom, taille, dossier, appli liée', onclick: () => { pageSetOpen = !pageSetOpen; renderEditor(); } }, '⚙ Page')));
     const p = page();
     const stepper = (get, set) => h('div', { class: 'stepper' }, h('button', { onclick: () => set(get() - 1) }, '−'), h('b', {}, get()), h('button', { onclick: () => set(get() + 1) }, '+'));
-    $('#pageset').className = 'pageset';
+    $('#pageset').className = 'pageset'; $('#pageset').hidden = !pageSetOpen;
     $('#pageset').replaceChildren(
       h('div', { class: 'grp' }, h('span', { class: 'lbl' }, 'Nom'), textInput(p.name, (v) => { p.name = v.slice(0, 30); save(); const t = $('#pagebar').children[pi]; if (t) t.textContent = (p.hidden ? '📁 ' : '') + p.name; })),
       h('div', { class: 'grp' }, h('span', { class: 'lbl' }, 'Colonnes'), stepper(() => p.cols, (v) => resize(v, p.rows))),

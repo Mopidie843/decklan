@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
+const zlib = require('zlib');
 const EventEmitter = require('events');
 const { WebSocketServer } = require('ws');
 const { checkPin } = require('./store');
@@ -27,6 +28,7 @@ class DeckServer extends EventEmitter {
     this.scheme = 'http'; this.profByIp = new Map();
     this.http = null; this.wss = null; this.clients = new Map(); this.nextId = 1; this.port = null;
     this.toggles = new Map(); this._cpu = null; this._stats = null;
+    this._files = new Map();
     this.sys = { mic: 0, mute: 0, obsrec: 0, obsstream: 0, vol: null, bri: null, weather: null, np: null };
   }
 
@@ -36,10 +38,11 @@ class DeckServer extends EventEmitter {
       const handler = (req, res) => this._serve(req, res);
       const srv = tls ? https.createServer(tls, handler) : http.createServer(handler);
       this.scheme = tls ? 'https' : 'http';
-      const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
+      const wss = new WebSocketServer({ noServer: true, maxPayload: 4096, perMessageDeflate: false });
       srv.on('upgrade', (req, socket, head) => {
         const url = new URL(req.url, 'http://x');
         if (url.pathname !== '/ws') return socket.destroy();
+        socket.setNoDelay(true); // pas d'attente de Nagle : l'appui part tout de suite
         wss.handleUpgrade(req, socket, head, (ws) => this._onConnect(ws, req, url));
       });
       srv.once('error', (e) => reject(e));
@@ -119,10 +122,30 @@ class DeckServer extends EventEmitter {
     if (p === '/') p = '/index.html';
     const file = path.normalize(path.join(this.phoneDir, p));
     if (!file.startsWith(this.phoneDir + path.sep)) { res.writeHead(403); return res.end(); }
-    fs.readFile(file, (err, data) => {
-      if (err) { res.writeHead(404); return res.end('404'); }
-      res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
-      res.end(req.method === 'HEAD' ? undefined : data);
+    // Fichiers du téléphone gardés en mémoire (compressés une seule fois) + ETag : rechargement quasi instantané.
+    const hit = this._files.get(file);
+    const send = (f) => {
+      if (req.headers['if-none-match'] === f.etag) { res.writeHead(304, { ETag: f.etag, 'Cache-Control': 'no-cache' }); return res.end(); }
+      const gz = f.gz && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const h = { 'Content-Type': f.type, 'Cache-Control': 'no-cache', ETag: f.etag, Vary: 'Accept-Encoding' };
+      if (gz) h['Content-Encoding'] = 'gzip';
+      const body = gz ? f.gz : f.raw;
+      h['Content-Length'] = body.length;
+      res.writeHead(200, h);
+      res.end(req.method === 'HEAD' ? undefined : body);
+    };
+    fs.stat(file, (err, st) => {
+      if (err || !st.isFile()) { res.writeHead(404); return res.end('404'); }
+      const etag = `"${st.size.toString(36)}-${Math.round(st.mtimeMs).toString(36)}"`;
+      if (hit && hit.etag === etag) return send(hit);
+      fs.readFile(file, (e2, raw) => {
+        if (e2) { res.writeHead(404); return res.end('404'); }
+        const type = MIME[path.extname(file)] || 'application/octet-stream';
+        const gz = raw.length > 1024 && /^(text|application\/(javascript|json|manifest))|svg/.test(type) ? zlib.gzipSync(raw, { level: 9 }) : null;
+        const f = { etag, type, raw, gz };
+        this._files.set(file, f);
+        send(f);
+      });
     });
   }
 

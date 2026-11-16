@@ -174,3 +174,15 @@ details { margin-top:14px; } summary { cursor:pointer; color:var(--muted); font-
 .logrow .lt { color:var(--muted); font-variant-numeric:tabular-nums; min-width:70px; }
 .logrow.err { color:#ff8a8a; }
 input[type=time] { color-scheme:dark; }
+
+.btn.on { background:var(--panel2); border-color:var(--accent); }
+.menu { position:relative; }
+.menu > summary { list-style:none; cursor:pointer; padding:5px 12px; font-weight:700; letter-spacing:1px; }
+.menu > summary::-webkit-details-marker { display:none; }
+.menu-pop { position:absolute; z-index:30; top:calc(100% + 6px); left:0; min-width:170px; background:var(--panel); border:1px solid #45454d; border-radius:11px; padding:5px; box-shadow:0 12px 32px rgba(0,0,0,.55); display:flex; flex-direction:column; }
+.menu-pop button { text-align:left; border:0; background:transparent; color:var(--text); padding:8px 12px; border-radius:7px; }
+.menu-pop button:hover:not(:disabled) { background:var(--panel2); }
+.menu-pop button.danger { color:var(--err); }
+.menu-pop button:disabled { opacity:.4; }
+.menu-pop hr { border:0; border-top:1px solid var(--line); margin:4px 2px; }
+.pageset[hidden] { display:none; }

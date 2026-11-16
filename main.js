@@ -3,7 +3,8 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, shell, clipboard, nativ
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
-const QRCode = require('qrcode');
+let QRCodeLib = null;
+const QRCode = { toDataURL: (...a) => (QRCodeLib || (QRCodeLib = require('qrcode'))).toDataURL(...a) }; // chargé à la demande
 const { Store } = require('./src/store');
 const { Actions } = require('./src/actions');
 const { DeckServer } = require('./src/server');
@@ -246,9 +247,10 @@ app.whenReady().then(async () => {
   obs.on('connection', () => pushStatus());
   applyLoginItem();
   const hidden = process.argv.includes('--hidden') || store.config.settings.startHidden;
+  const serverUp = startServer(); // le serveur démarre pendant que la fenêtre se crée
   if (!hidden) createWindow(true);
   createTray();
-  await startServer();
+  await serverUp;
   registerShortcuts();
   if (store.config.settings.updateRepo) setTimeout(async () => { // vérification discrète au démarrage
     try { const r = await checkLatest(store.config.settings.updateRepo, app.getVersion()); if (r.newer) logEntry('press', `Nouvelle version ${r.latest} disponible : ${r.url}`); } catch { /* hors ligne */ }
