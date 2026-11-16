@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+<title>DeckLan</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="side">
+  <div class="brand"><img src="logo.png" alt="" width="30" height="30"><span>DeckLan</span></div>
+  <nav id="nav">
+    <button data-view="editor" class="on"><span data-ic="layout-grid"></span>Éditeur</button>
+    <button data-view="planning"><span data-ic="calendar-clock"></span>Planning</button>
+    <button data-view="journal"><span data-ic="scroll-text"></span>Journal</button>
+    <button data-view="connect"><span data-ic="smartphone"></span>Connexion</button>
+    <button data-view="settings"><span data-ic="settings"></span>Réglages</button>
+  </nav>
+  <div id="pill" class="pill wait"><i></i><span>Démarrage…</span></div>
+</aside>
+<main id="view"></main>
+<div id="toasts"></div>
+<script src="icons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

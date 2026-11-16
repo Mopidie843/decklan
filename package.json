@@ -1,0 +1,72 @@
+{
+  "name": "decklan",
+  "productName": "DeckLan",
+  "version": "1.0.0",
+  "description": "Téléphone Android = Stream Deck pour PC Windows, via le réseau local",
+  "main": "main.js",
+  "author": "Baptiste Julien",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable --x64",
+    "headless": "node src/headless.js",
+    "test": "node test/server.test.js",
+    "apk": "bash scripts/build-apk.sh \"$ANDROID_JAR\" dist/DeckLan.apk",
+    "dist:setup": "electron-builder --win nsis --x64"
+  },
+  "dependencies": {
+    "multicast-dns": "^7.2.5",
+    "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "resedit": "^3.1.1"
+  },
+  "build": {
+    "appId": "fr.baptiste.decklan",
+    "productName": "DeckLan",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "phone/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "DeckLan-Setup.exe",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "shortcutName": "DeckLan"
+    },
+    "artifactName": "DeckLan-${version}-${os}-setup.${ext}",
+    "portable": {
+      "artifactName": "DeckLan-portable.exe"
+    },
+    "compression": "maximum",
+    "afterPack": "scripts/after-pack.js"
+  }
+}
