@@ -29,13 +29,14 @@ jobs:
           if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
           V=$(node -p "require('./package.json').version")
           npx electron-builder --win nsis-web portable --x64 -c.win.signAndEditExecutable=true -c.nsisWeb.appPackageUrl="https://github.com/Mopidie843/decklan/releases/download/v$V" --publish never
-          ls -l dist
+          ls -l dist dist/nsis-web
+          cp dist/nsis-web/*.exe dist/DeckLan-Setup.exe
       - uses: actions/upload-artifact@v4
         with:
           name: decklan-windows
           path: |
             dist/DeckLan-Setup.exe
-            dist/*.nsis.7z
+            dist/nsis-web/*.7z
             dist/DeckLan-portable.exe
       - name: Publier la release
         shell: bash
@@ -43,4 +44,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v$(node -p "require('./package.json').version")"
-          gh release create "$TAG" dist/DeckLan-Setup.exe dist/*.nsis.7z dist/DeckLan-portable.exe downloads/DeckLan.apk --target "${{ github.sha }}" --title "DeckLan $TAG" --generate-notes
+          gh release create "$TAG" dist/DeckLan-Setup.exe dist/nsis-web/*.7z dist/DeckLan-portable.exe downloads/DeckLan.apk --target "${{ github.sha }}" --title "DeckLan $TAG" --generate-notes
