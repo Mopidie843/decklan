@@ -1,14 +1,14 @@
 {
   "name": "decklan",
   "productName": "DeckLan",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Téléphone Android = Stream Deck pour PC Windows, via le réseau local",
   "main": "main.js",
   "author": "Baptiste Julien",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win portable --x64",
+    "dist": "electron-builder --win nsis portable --x64",
     "headless": "node src/headless.js",
     "test": "node test/server.test.js",
     "apk": "bash scripts/build-apk.sh \"$ANDROID_JAR\" dist/DeckLan.apk",
@@ -45,6 +45,12 @@
       "icon": "assets/icon.ico",
       "target": [
         {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
           "target": "portable",
           "arch": [
             "x64"
@@ -60,13 +66,28 @@
       "artifactName": "DeckLan-Setup.exe",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
-      "shortcutName": "DeckLan"
+      "shortcutName": "DeckLan",
+      "perMachine": false,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "language": "1036",
+      "displayLanguageSelector": false,
+      "menuCategory": false,
+      "differentialPackage": false
     },
     "artifactName": "DeckLan-${version}-${os}-setup.${ext}",
     "portable": {
       "artifactName": "DeckLan-portable.exe"
     },
     "compression": "maximum",
-    "afterPack": "scripts/after-pack.js"
+    "afterPack": "scripts/after-pack.js",
+    "electronLanguages": [
+      "fr",
+      "en-US"
+    ]
   }
 }

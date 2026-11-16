@@ -38,5 +38,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
-        run: gh release create "$TAG" dist/DeckLan-Setup.exe dist/DeckLan-portable.exe downloads/DeckLan.apk --target "${{ github.sha }}" --title "DeckLan $TAG" --generate-notes
+        run: |
+          TAG="v$(node -p "require('./package.json').version")"
+          gh release create "$TAG" dist/DeckLan-Setup.exe dist/DeckLan-portable.exe downloads/DeckLan.apk --target "${{ github.sha }}" --title "DeckLan $TAG" --generate-notes
