@@ -1,0 +1,43 @@
+name: iOS IPA
+
+on:
+  push:
+    paths: ['ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Générer le projet Xcode
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+      - name: Compiler (sans signature)
+        run: |
+          cd ios
+          xcodebuild -project DeckLan.xcodeproj -scheme DeckLan -configuration Release \
+            -sdk iphoneos -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: Créer l'IPA non signée
+        run: |
+          cd ios
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/DeckLan.app Payload/
+          zip -qry DeckLan.ipa Payload
+          ls -l DeckLan.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DeckLan-ipa
+          path: ios/DeckLan.ipa
+      - name: Ajouter à la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="v$(node -p "require('./package.json').version")"
+          cp ios/DeckLan.ipa DeckLan.ipa
+          gh release upload "$V" DeckLan.ipa --clobber || echo "Release $V absente : IPA dans les artefacts du workflow"
