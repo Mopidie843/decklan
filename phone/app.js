@@ -356,6 +356,7 @@
       setInterval(() => g.fillRect(0, 0, 16, 16), 1000);
     } catch (e) {}
   }
+  if (!document.documentElement.requestFullscreen) $('fs').hidden = true; // iPhone : pas d'API plein écran, utiliser « Sur l'écran d'accueil »
   $('fs').onclick = async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
