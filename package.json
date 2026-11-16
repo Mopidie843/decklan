@@ -1,18 +1,18 @@
 {
   "name": "decklan",
   "productName": "DeckLan",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Téléphone Android = Stream Deck pour PC Windows, via le réseau local",
   "main": "main.js",
   "author": "Baptiste Julien",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win nsis portable --x64",
+    "dist": "electron-builder --win nsis-web portable --x64 --publish never",
     "headless": "node src/headless.js",
     "test": "node test/server.test.js",
     "apk": "bash scripts/build-apk.sh \"$ANDROID_JAR\" dist/DeckLan.apk",
-    "dist:setup": "electron-builder --win nsis --x64"
+    "dist:setup": "electron-builder --win nsis --x64 --publish never"
   },
   "dependencies": {
     "multicast-dns": "^7.2.5",
@@ -45,7 +45,7 @@
       "icon": "assets/icon.ico",
       "target": [
         {
-          "target": "nsis",
+          "target": "nsis-web",
           "arch": [
             "x64"
           ]
@@ -88,6 +88,14 @@
     "electronLanguages": [
       "fr",
       "en-US"
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "Mopidie843",
+      "repo": "decklan"
+    },
+    "nsisWeb": {
+      "artifactName": "DeckLan-Setup.exe"
+    }
   }
 }
